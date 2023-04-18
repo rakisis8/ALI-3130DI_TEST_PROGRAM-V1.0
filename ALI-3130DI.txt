@@ -1,0 +1,97 @@
+loadscript ALI3130DI
+function Perform_Test()
+display.clear()
+display.setcursor(1,1)
+local GoodNG
+local GICC,IRICC
+local Result1,Result2
+GICC = GICCtest()
+IRICC = IRICCtest()
+Result1 = Teststatus(GICC, 0.00025,0.0003)
+Result2 = Teststatus(IRICC, 0.044,0.056)
+GICC=GICC*1e+3
+GICC=string.format("%2.3f",GICC)
+IRICC=IRICC*1e+3
+IRICC=string.format("%2.3f",IRICC)
+display.setcursor(1,1)
+if Partstatus(Result1, Result2) then
+GoodNG="GOOD"
+display.settext (GoodNG)
+display.settext ("    ")
+display.setcursor(2,1)
+display.settext(" ")
+display.settext ("GICC"..tostring(GICC))
+display.settext(" ")
+display.settext ("IRICC"..tostring(IRICC))
+else
+GoodNG="NG"
+display.settext (GoodNG)
+display.setcursor(2,1)
+display.settext(" ")
+display.settext ("GICC"..tostring(GICC))
+display.settext(" ")
+display.settext ("IRICC"..tostring(IRICC))
+display.settext(" ")
+end
+print(GICC,",",IRICC,",",GoodNG," ")
+end
+function GICCtest()
+local l_imeasured
+smua.reset()
+smua.source.func = smua.OUTPUT_DCVOLTS
+smua.source.levelv = 5
+smua.source.rangev = 5
+smua.source.limiti = 0.1
+smua.measure.rangei = 0.1
+smua.measure.autorangei=smua.AUTORANGE_ON
+smua.source.output = smua.OUTPUT_ON
+l_imeasured=smua.measure.i()
+delay(0.1)
+smua.source.output = smua.OUTPUT_OFF
+return l_imeasured
+end --GICCtest done
+ function IRICCtest()
+local l_imeasured
+smub.reset()
+smub.source.func = smub.OUTPUT_DCVOLTS
+smub.source.levelv = 5
+smub.source.rangev = 5
+smub.source.limiti = 0.1
+smub.measure.rangei = 0.1
+smub.measure.autorangei=smub.AUTORANGE_ON
+smub.source.output = smub.OUTPUT_ON
+l_imeasured=smub.measure.i()
+delay(0.1)
+smub.source.output = smub.OUTPUT_OFF
+return l_imeasured
+end --IRICCtest done
+function Teststatus(testvalue,min,max)
+local l_testfail
+if (testvalue >= min) and (testvalue <= max) then
+l_testfail = true
+else
+l_testfail = false
+end    -- if
+return l_testfail
+end
+function Partstatus(test1fail,test2fail)
+local l_status = false
+if test1fail and test2fail then l_status = true end
+return l_status
+end
+digio.trigger [14].mode = digio.TRIG_FALLING
+digio.trigger [14].clear()
+digio.trigger [13].mode = digio.TRIG_RISINGM
+digio.trigger [13].pulsewidth = 0.01
+display.clear()
+display.setcursor(1,1)
+display.settext("ALI3130DI")
+while(0) do
+digio.trigger [14].clear()
+sot_received=digio.trigger[14].wait(10E-3)
+if (sot_received) then
+Perform_Test()
+ end
+ end
+endscript
+ALI3130DI.run()
